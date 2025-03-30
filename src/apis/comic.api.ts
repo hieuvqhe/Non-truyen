@@ -1,5 +1,5 @@
 import http from '../utils/http';
-import { ComicCarousel, mapToComicCarousel, mapToComicDetail, ChapterDetail } from '../types/Comic.type';
+import { mapToComicCarousel, mapToComicDetail, ChapterDetail } from '../types/Comic.type';
 
 // CDN URL for images
 const cdnUrl = 'https://img.otruyenapi.com';

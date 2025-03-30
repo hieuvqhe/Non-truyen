@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import  { useEffect } from 'react'
 import CircularGallery from '../../components/CircularGallery'
 import useComicStore from '../../store/comicStore'
 import NewComic from '../NewComic';

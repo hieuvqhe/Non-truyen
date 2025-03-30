@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TiltedCard from "../../components/TiltedCard";
-import { ComicCarousel } from "../../types/Comic.type";
 import { ChevronLeft, ChevronRight, BookOpen, Search } from "lucide-react";
 import useComicStore from "../../store/comicStore";
 import { Input } from "../../components/ui/input";
@@ -17,11 +16,10 @@ const SearchPage = () => {
     searchResults, 
     isLoadingSearch, 
     currentSearchPage, 
-    currentSearchKeyword,
     fetchSearchResults
   } = useComicStore();
   
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages] = useState(1);
 
   // Navigate to comic detail page when a comic is clicked
   const handleComicClick = (slug: string) => {

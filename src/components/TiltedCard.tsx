@@ -42,7 +42,7 @@ export default function TiltedCard({
   displayOverlayContent = false,
   enableRainbowEffect = true, // Enabled by default
 }: TiltedCardProps) {
-  const { theme } = useTheme();
+  const {  } = useTheme();
   const ref = useRef<HTMLElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);

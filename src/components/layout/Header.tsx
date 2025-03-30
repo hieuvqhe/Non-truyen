@@ -36,7 +36,7 @@ const Header = () => {
   const debouncedSearch = useDebounce(searchInput, 500)
   
   // Use the search function from comic store
-  const { fetchSearchResults, resetState } = useComicStore()
+  const { fetchSearchResults } = useComicStore()
 
   useEffect(() => {
     const fetchCategories = async () => {

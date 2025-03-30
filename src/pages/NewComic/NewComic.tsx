@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Add this import
 import TiltedCard from "../../components/TiltedCard";
 import comicApi from "../../apis/comic.api";

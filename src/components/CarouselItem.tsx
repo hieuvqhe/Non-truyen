@@ -16,7 +16,7 @@ export default function CarouselItem({
   comic,
   index,
   x,
-  currentIndex,
+
   trackItemOffset,
   itemWidth,
   round,

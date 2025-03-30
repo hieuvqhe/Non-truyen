@@ -42,7 +42,7 @@ interface ComicState {
   resetState: () => void;
 }
 
-const useComicStore = create<ComicState>((set, get) => ({
+const useComicStore = create<ComicState>((set) => ({
   // Initial state
   homeComics: [],
   isLoadingHomeComics: false,
