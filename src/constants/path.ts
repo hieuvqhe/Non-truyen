@@ -12,7 +12,7 @@ const path = {
   disease: '/health-a-z/:id',
   medicines: '/drugs-and-supplements',
   medicine: '/drugs-and-supplements/:id',
-  orders: '/orders',
+  reading: '/readings',
   order: '/orders/:id',
   checkout: '/checkout',
   paymentSuccess: '/payment-success',
@@ -24,7 +24,8 @@ const path = {
   appointmentBooking: '/appointments/book/:doctorId',
   feedback: '/feedback',
   comicDetail: '/truyen-tranh/:slug',
-  chapter: '/truyen-tranh/:slug/chapter/:chapterNumber'
+  chapter: '/truyen-tranh/:slug/chapter/:chapterNumber',
+  follow: '/follow',
 };
 
 export default path;

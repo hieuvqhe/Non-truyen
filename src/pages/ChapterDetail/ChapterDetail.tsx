@@ -1,6 +1,16 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import useComicStore from "../../store/comicStore";
+import { updateReadingProgress } from "../../apis/user.api"; // Import the API function
+
+// Add debounce utility
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
 
 const ChapterDetail = () => {
   const { slug, chapterName } = useParams<{
@@ -25,6 +35,7 @@ const ChapterDetail = () => {
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const [showChapterSelect, setShowChapterSelect] = useState<boolean>(false);
   const [forceShowImages, setForceShowImages] = useState<boolean>(false);
+  const [scrollProgress, setScrollProgress] = useState<number>(0);
 
   // Fetch comic details if not loaded
   useEffect(() => {
@@ -52,6 +63,49 @@ const ChapterDetail = () => {
     }
   }, [currentComic, chapterName, fetchChapterDetail]);
 
+  // Check if user is authenticated
+  const isAuthenticated = !!localStorage.getItem('access_token');
+
+  // Create a debounced update function
+  const debouncedUpdateProgress = useCallback(
+    debounce(async (slug: string, chapter: string) => {
+      try {
+        console.log("Attempting to update reading progress:", { slug, chapter });
+        await updateReadingProgress({
+          slug,
+          chapter,
+        });
+        console.log("Reading progress updated successfully");
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.message.includes("Authentication required")) {
+            console.log("User not authenticated, skipping reading progress update");
+          } else {
+            console.error("Error updating reading progress:", error.message);
+          }
+        } else {
+          console.error("Unknown error updating reading progress:", error);
+        }
+      }
+    }, 1000),
+    []
+  );
+
+  // Update reading progress when chapter is loaded
+  useEffect(() => {
+    // Only proceed if we have both slug and chapterName and the chapter is loaded
+    if (!slug || !chapterName || !currentChapter) return;
+    
+    
+    // Only try to update if user is authenticated
+    if (isAuthenticated) {
+      debouncedUpdateProgress(slug, chapterName);
+    } else {
+      console.log("User not authenticated, skipping reading progress update");
+    }
+    
+  }, [slug, chapterName, currentChapter, isAuthenticated, debouncedUpdateProgress]);
+
   // Reset loaded images state when chapter changes
   useEffect(() => {
     setLoadedImages({});
@@ -59,7 +113,7 @@ const ChapterDetail = () => {
 
     // Force show images after a timeout in case events don't fire
     const timer = setTimeout(() => {
-      console.log("Force showing images after timeout");
+    
       setForceShowImages(true);
     }, 1000);
 
@@ -123,6 +177,34 @@ const ChapterDetail = () => {
   const toggleChapterSelect = () => {
     setShowChapterSelect((prev) => !prev);
   };
+
+  // Calculate and update scroll progress
+  const handleScroll = useCallback(() => {
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    const scrollTop = window.scrollY;
+    
+    // Calculate how far we've scrolled as a percentage
+    const scrollPercentage = (scrollTop / (documentHeight - windowHeight)) * 100;
+    
+    // Clamp the value between 0 and 100
+    const clampedScrollPercentage = Math.min(Math.max(scrollPercentage, 0), 100);
+    
+    setScrollProgress(clampedScrollPercentage);
+  }, []);
+  
+  // Set up scroll event listener
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    
+    // Initialize scroll position on mount
+    handleScroll();
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [handleScroll]);
 
   // Loading state
   if (isLoadingComicDetail || isLoadingChapter) {
@@ -327,6 +409,19 @@ const ChapterDetail = () => {
                 Next →
               </Link>
             )}
+          </div>
+          
+          {/* Reading Progress Bar */}
+          <div className="w-full h-1 bg-muted/30 relative">
+            <div 
+              className="absolute top-0 left-0 h-full bg-primary transition-all duration-300 ease-out"
+              style={{ width: `${scrollProgress}%` }}
+              aria-label={`Reading progress: ${Math.round(scrollProgress)}%`}
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(scrollProgress)}
+            />
           </div>
         </div>
       </div>

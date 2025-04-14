@@ -7,4 +7,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://server-nontruyen.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  }
 })

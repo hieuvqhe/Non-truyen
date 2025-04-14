@@ -10,7 +10,7 @@ import {
 import { ModeToggle } from '../../components/mode-toggle'
 import { Input } from '../../components/ui/input'
 import path from '../../constants/path'
-import { Search, Menu, X, ArrowLeft, Bookmark, BookOpenCheck, ChevronDown } from 'lucide-react'
+import { Search, Menu, X, ArrowLeft, Bookmark, BookOpenCheck, ChevronDown, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import useAuthStore from '../../store/authStore'
@@ -22,9 +22,10 @@ import useComicStore from '../../store/comicStore'
 import { useDebounce } from '../../hooks/useDebounce'
 
 const Header = () => {
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { isAuthenticated, logout, initializeAuth, user } = useAuthStore()
   const navigate = useNavigate()
   
+  const [userLoading, setUserLoading] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
@@ -74,9 +75,18 @@ const Header = () => {
     fetchQuickSearchResults()
   }, [debouncedSearch])
 
+  // Call initializeAuth when component mounts to check if user is authenticated
+  useEffect(() => {
+    const loadUserData = async () => {
+      setUserLoading(true)
+      await initializeAuth()
+      setUserLoading(false)
+    }
+    loadUserData()
+  }, [initializeAuth])
+
   const handleLogout = () => {
-    logout()
-    // Additional logic if needed
+    logout() // This now handles clearing localStorage and updating the store
   }
   
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,6 +108,25 @@ const Header = () => {
     navigate(`/truyen-tranh/${slug}`)
     setSearchOpen(false)
     setSearchInput('')
+  }
+
+  const UserAvatar = () => {
+    if (userLoading) {
+      return (
+        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </div>
+      )
+    }
+    
+    if (!user) return null
+    
+    return (
+      <Avatar className='h-8 w-8'>
+        <AvatarImage src={user.avatar || ""} alt={user.name || ""} />
+        <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+      </Avatar>
+    )
   }
 
   if (searchOpen) {
@@ -228,36 +257,39 @@ const Header = () => {
             <Search className='h-5 w-5' />
           </Button>
 
-          <Link to={path.orders}>
+          <Link to={path.reading}>
             <Button variant='ghost' size='icon'>
               <Bookmark className='h-5 w-5' />
             </Button>
           </Link>
 
-          {isAuthenticated && user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
-                  <Avatar className='h-8 w-8'>
-                    <AvatarImage src={user.avatar || ""} alt={user.name || ""} />
-                    <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className='w-56' align='end' forceMount>
-                <div className='flex items-center justify-start gap-2 p-2'>
-                  <div className='flex flex-col space-y-1 leading-none'>
-                    <p className='font-medium'>{user.name || 'User'}</p>
-                    <p className='text-xs text-muted-foreground'>{user.email || ''}</p>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <span className="hidden md:inline-block font-medium text-sm">
+                {userLoading ? 'Loading...' : user ? `Hello ${user.name}` : 'Hello'}
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
+                    <UserAvatar />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className='w-56' align='end' forceMount>
+                  <div className='flex items-center justify-start gap-2 p-2'>
+                    <div className='flex flex-col space-y-1 leading-none'>
+                      <p className='font-medium'>{user?.name || 'User'}</p>
+                      <p className='text-xs text-muted-foreground'>{user?.email || ''}</p>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate(path.profile)}>Profile</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(path.orders)}>My Orders</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate(path.profile)}>Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(path.reading)}>Truyện Đang Đọc</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(path.follow)}>Truyện Đang Theo Dõi</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ) : (
             <div className='flex items-center space-x-2'>
               <Button variant='destructive' onClick={() => navigate(path.login)}>
@@ -322,17 +354,18 @@ const Header = () => {
             </Link>
 
             <div className='border-t pt-4'>
-              {isAuthenticated && user ? (
+              {isAuthenticated ? (
                 <>
                   <div className='flex items-center px-3 py-2'>
-                    <Avatar className='h-8 w-8 mr-3'>
-                      <AvatarImage src={user.avatar || ""} alt={user.name || ""} />
-                      <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className='font-medium'>{user.name || 'User'}</p>
-                      <p className='text-xs text-muted-foreground'>{user.email || ''}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {userLoading ? 'Loading...' : user ? `Hello ${user.name}` : 'Hello'}
+                      </span>
+                      <UserAvatar />
                     </div>
+                  </div>
+                  <div>
+                    <p className='text-xs text-muted-foreground px-3'>{user?.email || ''}</p>
                   </div>
                   <Link
                     to={path.profile}
@@ -342,7 +375,7 @@ const Header = () => {
                     Profile
                   </Link>
                   <Link
-                    to={path.orders}
+                    to={path.reading}
                     className='block rounded-md px-3 py-2 text-base font-medium hover:bg-accent'
                     onClick={() => setMobileMenuOpen(false)}
                   >

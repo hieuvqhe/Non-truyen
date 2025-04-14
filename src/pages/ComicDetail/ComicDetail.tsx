@@ -1,8 +1,10 @@
 import  { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import SpotlightCard from '../../components/SpotlightCard';
 import { Comic } from '../../types/Comic.type';
 import comicApi from '../../apis/comic.api';
+import { getReadingList, addToFavorites, removeFromFavorites, getFavoritesList } from '../../apis/user.api';
+import { toast } from 'sonner';
 
 const ComicDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -11,6 +13,17 @@ const ComicDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const chaptersPerPage = 50;
+  const [userReadingProgress, setUserReadingProgress] = useState<{
+    lastReadChapter: string;
+    lastReadAt: string;
+  } | null>(null);
+  const [readingListLoading, setReadingListLoading] = useState<boolean>(false);
+  const [isInFavorites, setIsInFavorites] = useState<boolean>(false);
+  const [favoritesLoading, setFavoritesLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+  // Check if user is logged in
+  const isLoggedIn = !!localStorage.getItem('access_token');
 
   useEffect(() => {
     const fetchComicDetail = async () => {
@@ -30,6 +43,101 @@ const ComicDetail = () => {
 
     fetchComicDetail();
   }, [slug]);
+
+  // Fetch user's reading list if logged in
+  useEffect(() => {
+    const fetchReadingList = async () => {
+      if (!isLoggedIn || !slug) return;
+
+      try {
+        setReadingListLoading(true);
+        const response = await getReadingList();
+        const comicProgress = response.data.find(item => item.slug === slug);
+        
+        if (comicProgress) {
+          setUserReadingProgress({
+            lastReadChapter: comicProgress.lastReadChapter,
+            lastReadAt: comicProgress.lastReadAt
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch reading list:", err);
+      } finally {
+        setReadingListLoading(false);
+      }
+    };
+
+    fetchReadingList();
+  }, [slug, isLoggedIn]);
+
+  // Fetch user's favorites list if logged in
+  useEffect(() => {
+    const fetchFavoritesList = async () => {
+      if (!isLoggedIn || !slug) return;
+
+      try {
+        setFavoritesLoading(true);
+        const response = await getFavoritesList();
+        const isComicInFavorites = response.data.some(item => item.slug === slug);
+        setIsInFavorites(isComicInFavorites);
+      } catch (err) {
+        console.error("Failed to fetch favorites list:", err);
+      } finally {
+        setFavoritesLoading(false);
+      }
+    };
+
+    fetchFavoritesList();
+  }, [slug, isLoggedIn]);
+
+  // Handle continue reading
+  const handleContinueReading = () => {
+    if (comic && userReadingProgress) {
+      navigate(`/truyen-tranh/${comic.slug}/chapter/${userReadingProgress.lastReadChapter}`);
+    }
+  };
+
+  // Handle adding comic to favorites
+  const handleAddToFavorites = async () => {
+    if (!isLoggedIn) {
+      toast.error("Please log in to add comics to favorites");
+      return;
+    }
+
+    try {
+      setFavoritesLoading(true);
+      await addToFavorites({ 
+        slug: slug || '',
+        chapter: userReadingProgress?.lastReadChapter 
+      });
+      setIsInFavorites(true);
+      toast.success("Comic added to favorites successfully");
+    } catch (err: any) {
+      console.error("Failed to add comic to favorites:", err);
+      toast.error(err.message || "Failed to add comic to favorites");
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
+
+  // Handle removing comic from favorites
+  const handleRemoveFromFavorites = async () => {
+    if (!isLoggedIn || !slug) {
+      return;
+    }
+
+    try {
+      setFavoritesLoading(true);
+      await removeFromFavorites(slug);
+      setIsInFavorites(false);
+      toast.success("Comic removed from favorites successfully");
+    } catch (err: any) {
+      console.error("Failed to remove comic from favorites:", err);
+      toast.error(err.message || "Failed to remove comic from favorites");
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -148,8 +256,7 @@ const ComicDetail = () => {
           
           {/* Navigation Buttons */}
           <div className="flex flex-wrap gap-3 mt-4">
-
-          {latestChapter && (
+            {latestChapter && (
               <Link
                 to={`/truyen-tranh/${comic.slug}/chapter/${latestChapter.name}`}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 dark:text-white text-white rounded-md transition-colors"
@@ -157,7 +264,6 @@ const ComicDetail = () => {
                 aria-label="Read latest chapter"
               >
                  Đọc từ đầu
-               
               </Link>
             )}
 
@@ -172,25 +278,41 @@ const ComicDetail = () => {
               </Link>
             )}
             
-         
+            {userReadingProgress && (
+              <button
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:text-white text-white rounded-md transition-colors"
+                tabIndex={0}
+                aria-label="Continue reading"
+                onClick={handleContinueReading}
+                disabled={readingListLoading}
+              >
+                Đọc tiếp
+              </button>
+            )}
             
-            <button
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:text-white text-white rounded-md transition-colors"
-              tabIndex={0}
-              aria-label="Continue reading"
-              disabled
-            >
-              Đọc tiếp
-            </button>
-            
-            <button
-              className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 dark:text-white text-white rounded-md transition-colors"
-              tabIndex={0}
-              aria-label="Follow this comic"
-              disabled
-            >
-              Theo dõi
-            </button>
+            {isLoggedIn && (
+              isInFavorites ? (
+                <button
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 dark:text-white text-white rounded-md transition-colors"
+                  tabIndex={0}
+                  aria-label="Remove from favorites"
+                  onClick={handleRemoveFromFavorites}
+                  disabled={favoritesLoading}
+                >
+                  Bỏ theo dõi
+                </button>
+              ) : (
+                <button
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 dark:text-white text-white rounded-md transition-colors"
+                  tabIndex={0}
+                  aria-label="Add to favorites"
+                  onClick={handleAddToFavorites}
+                  disabled={favoritesLoading}
+                >
+                  Theo dõi
+                </button>
+              )
+            )}
           </div>
         </div>
       </div>
