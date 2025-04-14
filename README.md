@@ -1,54 +1,72 @@
-# React + TypeScript + Vite
+# Non Truyện - Website đọc truyện tranh
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dự án này là một website cho phép đọc truyện tranh online với nhiều tính năng như: xem danh sách truyện, tìm kiếm theo thể loại, đọc chi tiết từng chapter, đánh dấu truyện yêu thích, theo dõi quá trình đọc.
+Bạn có thể truy cập trang web ở đây: https://non-truyen.vercel.app/
 
-Currently, two official plugins are available:
+## Công nghệ sử dụng
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React**: Framework UI chính
+- **TypeScript**: Ngôn ngữ lập trình với kiểu dữ liệu tĩnh
+- **Vite**: Công cụ build hiện đại cho frontend
+- **React Router DOM**: Quản lý định tuyến trong ứng dụng
+- **Tailwind CSS**: Framework CSS tiện ích
+- **Shadcn UI**: Các component UI có thể tùy chỉnh
+- **Zustand**: Quản lý state toàn cục
+- **Axios**: Thư viện HTTP client
+- **Framer Motion**: Tạo animation cho UI
+- **OGL**: Thư viện WebGL để tạo hiệu ứng 3D
 
-## Expanding the ESLint configuration
+## Tính năng
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 📚 Danh sách truyện tranh với hiển thị tương tác
+- 🔍 Tìm kiếm truyện theo tên
+- 🏷️ Phân loại truyện theo thể loại
+- 📖 Đọc truyện theo từng chapter
+- 🌓 Hỗ trợ chế độ sáng/tối
+- 🔐 Đăng ký, đăng nhập tài khoản
+- ❤️ Đánh dấu truyện yêu thích
+- 📋 Theo dõi lịch sử đọc truyện
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Cấu trúc dự án
+
+```
+src/
+  ├── apis/          # API calls và services
+  ├── assets/        # Tài nguyên tĩnh
+  ├── components/    # Các component có thể tái sử dụng
+  │   ├── layout/    # Component layout chính
+  │   └── ui/        # UI components cơ bản
+  ├── constants/     # Hằng số và cấu hình
+  ├── hooks/         # Custom React hooks
+  ├── lib/           # Thư viện tiện ích
+  ├── pages/         # Các trang của ứng dụng
+  ├── store/         # State management với Zustand
+  ├── types/         # Type definitions cho TypeScript
+  └── utils/         # Các hàm tiện ích
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Hướng dẫn cài đặt
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+1. Clone repository:
+```bash
+git clone <repository-url>
+cd non-truyen
 ```
+
+2. Cài đặt dependencies:
+```bash
+npm install
+```
+
+3. Chạy ứng dụng ở môi trường development:
+```bash
+npm run dev
+```
+
+## Các lệnh có sẵn
+
+- `npm run dev`: Khởi chạy server phát triển
+- `npm run build`: Build ứng dụng cho production
+- `npm run lint`: Kiểm tra lỗi code với ESLint
+- `npm run preview`: Xem trước bản build
+
